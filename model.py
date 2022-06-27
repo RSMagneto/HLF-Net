@@ -63,12 +63,14 @@ class involution(nn.Module):
 class poolingNet(nn.Module):
     def __init__(self,n_channels):
         super(poolingNet, self).__init__()
+        # self.inc = DoubleConv(n_channels, 32)
         self.inc = nn.Sequential(
             nn.ReflectionPad2d(1),
             nn.Conv2d(n_channels, 32, kernel_size=3, padding=0),
             nn.ReLU(inplace=True)
         )
-        self.involution=involution(channels=32, kernel_ size=3, stride=1)
+        self.involution=involution(channels=32,kernel_size=3,stride=1)
+        # self.involution=nn.Conv2d(32,32,kernel_size=3,stride=1,padding=1)
         self.outc = nn.Sequential(
             nn.ReflectionPad2d(1),
             nn.Conv2d(32, n_channels-1, kernel_size=3, padding=0),
@@ -119,20 +121,16 @@ class UNet(nn.Module):
         self.skip2 = SkipConnection(in_channels=32, num_convblocks=2,d_model=256)
         self.up3 = Up(128, 64 // factor, bilinear)
         self.up4 = Up(64, 32, bilinear)
-        self.outc = nn.Sequential(
-            nn.ReflectionPad2d(1),
-            nn.Conv2d(32, n_classes, kernel_size=3, padding=0),
-            nn.ReLU(inplace=True)
-        )
+        self.outc = OutConv(32, n_classes)
 
     def forward(self, pan,ms):
         x = torch.cat([pan, ms], 1)
-        x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x = self.up3(x3, self.skip1(x2))
-        x = self.up4(x, self.skip2(x1))
-        logits = self.outc(x)
+        x1 = self.inc(x) # torch.Size([16, 64, 256, 256])
+        x2 = self.down1(x1) # torch.Size([16, 128, 128, 128])
+        x3 = self.down2(x2) # torch.Size([16, 256, 64, 64])
+        x = self.up3(x3, self.skip1(x2)) # torch.Size([16, 64, 128, 128])
+        x = self.up4(x, self.skip2(x1)) # torch.Size([16, 64, 256, 256])
+        logits = self.outc(x) # torch.Size([16, 4, 256, 256])
         return logits
 
 class DeformableTransformerDecoderLayer(nn.Module):
@@ -141,14 +139,17 @@ class DeformableTransformerDecoderLayer(nn.Module):
                  n_heads=4):
         super().__init__()
 
+        # cross attention
         self.cross_attn = Attention()
         self.dropout1 = nn.Dropout(dropout)
         self.norm1 = nn.LayerNorm(d_model)
 
+        # self attention
         self.self_attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout)
         self.dropout2 = nn.Dropout(dropout)
         self.norm2 = nn.LayerNorm(d_model)
 
+        # ffn
         self.linear1 = nn.Linear(d_model, d_ffn)
         self.activation = nn.GLU()
         self.dropout3 = nn.Dropout(dropout)
@@ -163,6 +164,7 @@ class DeformableTransformerDecoderLayer(nn.Module):
         return tgt
 
     def forward(self, tgt, src_padding_mask=None):
+
         tgt2 = self.cross_attn(tgt)
         tgt = tgt + self.dropout1(tgt2)
         tgt = self.norm1(tgt)

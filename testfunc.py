@@ -1,4 +1,3 @@
-from torch.autograd import Variable
 import model
 import torch
 import functions
@@ -6,7 +5,6 @@ import numpy
 import os
 from skimage import io
 import argparse
-import scipy.io
 
 def test_matRead(data):
     data=data[None, :, :, :]
@@ -17,17 +15,18 @@ def test_matRead(data):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mspath', help='test lrms image name', require=True)
-    parser.add_argument('--panpath', help='test hrpan image name', require=True)
-    parser.add_argument('--saveimgpath', help='output model dir', require=True)
+    parser.add_argument('--mspath', help='test lrms image name', required=True)
+    parser.add_argument('--panpath', help='test hrpan image name', required=True)
+    parser.add_argument('--saveimgpath', help='output model dir', required=True)
     parser.add_argument('--device', default=torch.device('cuda:0'))
     parser.add_argument('--channels',default=5)
     opt = parser.parse_args()
 
     poolingnet = model.poolingNet(5).to(opt.device)
     unet = model.UNet(5, 4).to(opt.device)
-    poolingnet.load_state_dict(torch.load('./lowpass/best.pth'))
-    unet.load_state_dict(torch.load('./highpass/best.pth'))
+
+    poolingnet.load_state_dict(torch.load('./model/lowpass/best.pth'))
+    unet.load_state_dict(torch.load('/mnt/./model/highpass/best.pth'))
     gaussian_conv_4 = functions.GaussianBlurConv(4).to(opt.device)
     gaussian_conv_1 = functions.GaussianBlurConv(1).to(opt.device)
     for msfilename in os.listdir(opt.mspath):
