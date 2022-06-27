@@ -68,7 +68,7 @@ class poolingNet(nn.Module):
             nn.Conv2d(n_channels, 32, kernel_size=3, padding=0),
             nn.ReLU(inplace=True)
         )
-        self.involution=nn.Conv2d(32,32,kernel_size=3,stride=1,padding=1)
+        self.involution=involution(channels=32, kernel_ size=3, stride=1)
         self.outc = nn.Sequential(
             nn.ReflectionPad2d(1),
             nn.Conv2d(32, n_channels-1, kernel_size=3, padding=0),
@@ -119,7 +119,11 @@ class UNet(nn.Module):
         self.skip2 = SkipConnection(in_channels=32, num_convblocks=2,d_model=256)
         self.up3 = Up(128, 64 // factor, bilinear)
         self.up4 = Up(64, 32, bilinear)
-        self.outc = OutConv(32, n_classes)
+        self.outc = nn.Sequential(
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(32, n_classes, kernel_size=3, padding=0),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self, pan,ms):
         x = torch.cat([pan, ms], 1)
