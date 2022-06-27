@@ -58,7 +58,7 @@ if __name__ == '__main__':
     gaussian_conv_1 = functions.GaussianBlurConv(1).to(opt.device)
 
     # LF-Net
-    poolingnet = model.poolingNet(opt.channels,opt.channels-1).to(opt.device)
+    poolingnet = model.poolingNet(opt.channels).to(opt.device)
     for module in poolingnet.modules():
         if isinstance(module, nn.BatchNorm2d):
             module.eval()
