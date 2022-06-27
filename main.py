@@ -106,7 +106,7 @@ if __name__ == '__main__':
                 )   # highLoss
                 print(training_state)
         print('%d epoch: loss is %.6f, epoch time is %.4f' % (i, epoch_losses.avg, batch_time.avg))
-        torch.save(net.state_dict(), os.path.join(opt.outputs_dir, 'lowpass/epoch_{}.pth'.format(i)))   # highLoss
+        torch.save(net.state_dict(), os.path.join(opt.outputs_dir, 'lowpass/epoch_{}.pth'.format(i)))   # highpass
 
         net.eval()
         epoch_SAM=functions.AverageMeter()
@@ -132,4 +132,4 @@ if __name__ == '__main__':
         print('best epoch:{:.0f}'.format(best_epoch))
         scheduler1.step()
     print('net best epoch: {}, epoch_SAM: {:.6f}'.format(best_epoch, best_SAM))
-    torch.save(best_weights, os.path.join(opt.outputs_dir, 'lowpass/best.pth'))   # highLoss
+    torch.save(best_weights, os.path.join(opt.outputs_dir, 'lowpass/best.pth'))   # highpass
