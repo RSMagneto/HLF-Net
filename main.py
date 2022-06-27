@@ -18,7 +18,6 @@ import random
 import dataloader
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-import adcsr
 
 if __name__ == '__main__':
 
