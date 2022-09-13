@@ -121,7 +121,7 @@ class UNet(nn.Module):
         self.skip2 = SkipConnection(in_channels=32, num_convblocks=2,d_model=256)
         self.up3 = Up(128, 64 // factor, bilinear)
         self.up4 = Up(64, 32, bilinear)
-        self.outc = OutConv(32, n_classes)
+        self.outc = DoubleConv(32, n_classes)
 
     def forward(self, pan,ms):
         x = torch.cat([pan, ms], 1)
@@ -158,7 +158,7 @@ class DeformableTransformerDecoderLayer(nn.Module):
         self.norm3 = nn.LayerNorm(d_model)
 
     def forward_ffn(self, tgt):
-        tgt2 = self.linear2(self.dropout3(self.linear1(tgt)))
+        tgt2 = self.dropout2(self.linear2(self.dropout3(self.activation(self.linear1(tgt)))))
         tgt = tgt + self.dropout4(tgt2)
         tgt = self.norm3(tgt)
         return tgt
